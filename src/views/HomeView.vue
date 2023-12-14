@@ -1,38 +1,39 @@
-<template>
-  <div>
-    <div v-if="items.length === 0">
-      陣列為空的畫面
-    </div>
-    <div v-else>
-      陣列有資料的畫面
-      <ul>
-        <p>{{ items }}</p>
-      </ul>
-    </div>
-  </div>
+<template lang="pug">
+div
+  div(v-if="items.length === 0")
+    p 陣列為空的畫面
+  div(v-else)
+    p 陣列有資料的畫面
+    //-p {{ items }}
+    div(v-for='pair in items' :key="pair.pair")
+      div(v-for='(person,index) in pair.roles' :key="index")
+        p {{ person.label }}
 </template>
   
 <script lang="ts">
-import { defineComponent, ref, onMounted, onUnmounted } from 'vue'
+import { defineComponent, Ref,ref, onMounted, onUnmounted } from 'vue'
 import dayjs from '@/utils/dayjs';
 import { getDatabase, ref as firebaseRef, onValue, DataSnapshot } from "firebase/database";
 import firebaseApp from '@/firebase/firebaseConfig';
+import Role from "@/interfaces/RoleInterface";
+import GroupedRoles from "@/interfaces/GroupedRolesInterface";
 export default defineComponent({
   name: 'GameSetting',
   components: {
   },
   setup() {
-    const items = ref([]);
+    const items: Ref<Role[]> = ref([]);
     const date = dayjs.tz(new Date()).format('YYYY-MM-DD')
     const database = getDatabase(firebaseApp);
     const listRef = firebaseRef(database, date);
     let unsubscribe: () => void;
     onMounted(() => {
       unsubscribe = onValue(listRef, (snapshot: DataSnapshot) => {
-        const data = snapshot.val();
+        const data:GroupedRoles[] = snapshot.val();
         console.log(snapshot.val())
         if (data) {
-          items.value = data;
+          console.log(Object.values(data)[0].roles);
+          items.value = Object.values(data)[0].roles;
         } else {
           items.value = [];
         }
